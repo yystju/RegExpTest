@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>撸串儿样例</title>
+    <link rel="stylesheet" href="./stylesheets/style.css">
+</head>
+<body>
+    <label for="barcode">BARCODE 样例:</label><input type="text" id="barcode" value="6.00.01.0022-01-10A0G9T0001" style="width:800px;"/><br/>
+
+    <fieldset>
+        <legend>字段描述</legend>
+        <label for="fieldName">字段名称：</label><input type="text" id="fieldName" value="product_number"/>
+        <label for="fieldSelector">字段选择器：</label><input type="text" id="fieldSelector" value="#form0 > #product_number"/>
+    </fieldset>
+    <fieldset>
+        <legend>字段扫描</legend>
+        <label for="starttag">起始位置:</label>
+        <input type="text" id="starttag" value="6.|2"/>
+        <select id="startType"><option value="keyword" selected>关键字(|相对偏移量)</option><option value="offset">绝对偏移量</option><option value="regexp">正则表达式</option><option value="start">起始位置</option></select>
+        <label for="endtag">结束位置:</label>
+        <input type="text" id="endtag" value="-"/>
+        <select id="endType"><option value="keyword" selected>关键字(|相对偏移量)</option><option value="offset">绝对偏移量</option><option value="regexp">正则表达式</option><option value="end">结束位置</option></select>
+    </fieldset>
+    <fieldset>
+        <legend>转化脚本 (字段扫描选取的内容在脚本中变量名为content):</legend>
+        <textarea id="contentScript" style="width: 800px; height: 50px;">content.substring(content.indexOf('.') + 1) + '-X-' + (new Date()).toISOString()</textarea>
+    </fieldset>
+
+    <br/>
+
+    <button id="test">扫描</button>
+
+    <br/>
+    <br/>
+    <br/>
+
+    <fieldset>
+        <legend>样例表单:</legend>
+        <form id="form0" name="form0" action="./index.html" method="post">
+            <label for="product_id">Product ID:</label><input type="text" id="product_id" value="" style="width: 800px;"/><br/>
+            <label for="product_number">Product Number:</label><input type="text" id="product_number" value="" style="width:800px;"/>
+        </form>
+    </fieldset>
+
+    <script type="application/javascript">
+        window.addEventListener('DOMContentLoaded', function () {
+            document.querySelector('#test').addEventListener('click', function () {
+                var barcode = document.querySelector('#barcode').value;
+                var fieldName = document.querySelector('#fieldName').value;
+                var fieldSelector = document.querySelector('#fieldSelector').value;
+                var starttag = document.querySelector('#starttag').value;
+                var startType = document.querySelector('#startType').value;
+                var endtag = document.querySelector('#endtag').value;
+                var endType = document.querySelector('#endType').value;
+                var contentScript = document.querySelector('#contentScript').value;
+
+                console.log(`barcode : ${barcode}, fieldName : ${fieldName}, fieldSelector : ${fieldSelector}, starttag : ${starttag}, startType : ${startType}, endtag : ${endtag}, endType : ${endType}, contentScript : ${contentScript}`);
+
+                var startPos = -1;
+                var endPos = -1;
+
+                if('regexp' == startType) {
+                    var startExp = new RegExp(starttag, 'i');
+
+                    var startE = startExp.exec(barcode);
+
+                    startPos = startE.index;
+
+                    console.dir(startE);
+
+                } else if('offset' == startType) {
+                    startPos = Number(starttag);
+                } else if('start' == startType) {
+                    startPos = 0;
+                } else if('keyword' == startType) {
+                    var a = starttag.split('|');
+
+                    console.log(a);
+
+                    var key = a.length >= 2 ? a[0] : a;
+                    var offset = a.length >= 2 ? a[1] : 0;
+
+                    startPos = barcode.indexOf(key) + Number(offset);
+                }
+
+                if('regexp' == startType) {
+                    var endExp = new RegExp(endtag, 'i');
+
+                    var endE = endExp.exec(barcode);
+
+                    endPos = endE.index;
+
+                    console.dir(endE);
+                } else if('offset' == endType) {
+                    endPos = Number(endtag);
+                } else if('end' == endType) {
+                    endPos = barcode.length;
+                } else if('keyword' == startType) {
+                    var a = endtag.split('|');
+
+                    console.log(a);
+
+                    var key = a.length >= 2 ? a[0] : a;
+                    var offset = a.length >= 2 ? a[1] : 0;
+
+                    endPos = barcode.indexOf(key) + Number(offset);
+                }
+
+                console.log(`startPos : ${startPos}, endPos : ${endPos}`);
+
+                if(startPos >= 0 && endPos >= 0) {
+                    var value = barcode.substr(startPos, endPos - startPos);
+
+                    if(value) {
+                        // -- SandBox --
+                        var that = {};
+
+                        that.alert = undefined;
+                        that.prompt = undefined;
+                        that.window = undefined;
+                        that.document = undefined;
+                        that.navigator = undefined;
+                        that.sessionStorage = undefined;
+                        that.localStorage = undefined;
+
+                        that.content = value;
+
+                        with(that) {
+                            try {
+                                var ret = (function(s) {
+                                    return eval(s);
+                                }).apply(that, [contentScript]);
+
+                                if(ret) {
+                                    value = ret.toString();
+                                }
+                            } catch(ex) {
+                                console.error(ex);
+                            }
+                        }
+                    }
+
+                    if(fieldSelector) {
+                        var i = document.querySelector(fieldSelector);
+
+                        if(i) {
+                            i.value = value;
+                        }
+                    }
+                }
+            }, false);
+        }, false);
+    </script>
+</body>
+</html>
