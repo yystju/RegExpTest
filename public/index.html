@@ -17,10 +17,10 @@
         <legend>字段扫描</legend>
         <label for="starttag">起始位置:</label>
         <input type="text" id="starttag" value="6.|2"/>
-        <select id="startType"><option value="keyword" selected>关键字(|相对偏移量)</option><option value="offset">绝对偏移量</option><option value="regexp">正则表达式</option><option value="start">起始位置</option></select>
+        <select id="startType"><option value="keyword" selected>关键字(|*重复次数+相对偏移量)</option><option value="offset">绝对偏移量</option><option value="regexp">正则表达式</option><option value="start">起始位置</option></select>
         <label for="endtag">结束位置:</label>
-        <input type="text" id="endtag" value="-"/>
-        <select id="endType"><option value="keyword" selected>关键字(|相对偏移量)</option><option value="offset">绝对偏移量</option><option value="regexp">正则表达式</option><option value="end">结束位置</option></select>
+        <input type="text" id="endtag" value="-|*2+3"/>
+        <select id="endType"><option value="keyword" selected>关键字(|*重复次数+相对偏移量)</option><option value="offset">绝对偏移量</option><option value="regexp">正则表达式</option><option value="end">结束位置</option></select>
     </fieldset>
     <fieldset>
         <legend>转化脚本 (字段扫描选取的内容在脚本中变量名为content):</legend>
